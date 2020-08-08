@@ -51,14 +51,14 @@
             <nav class="container-fluid fixed-top bg-white pt-2">
                 <div class="row">
                     <div class="col-sm-3 text-center text-md-left pl-4">
-                        <a class="navbar-brand" href="#"><img src="logo.jpg"></a>
+                        <a class="navbar-brand" href="index.html"><img src="logo.jpg"></a>
                     </div>
                     <div class="col-sm-3 pt-1">
-                        <input type="text" class="form-control mb-2" placeholder="URL" v-model="url">
+                        <input type="text" class="form-control mb-2" placeholder="URL YouTube" v-model="url">
                     </div>
                     <div class="col-sm-3 pt-1">
                         <div class="input-group mb-3">
-                            <input type="text" class="form-control" placeholder="Keyword" v-model="keyword">
+                            <input type="text" class="form-control" placeholder="Search for Words" v-model="keyword">
                             <div class="input-group-append">
                                 <button type="button" class="btn btn-danger px-4" title="Clear" @click="cleanUp"><i class="fas fa-redo"></i></button>
                             </div>
@@ -76,8 +76,10 @@
                                     <iframe width="560" height="315" :src="embedVideo(url, res.start, res.end)" frameborder="0" allowfullscreen></iframe>
                                 </div>
                                 <div class="p-3">
-                                    <p class="font-weight-bold mb-2" v-html="ucwords(res.text)"></p>
-                                    <p class="text-muted m-0">Start {{secondsToTime(res.start).m}}:{{secondsToTime(res.start).s}}, End {{secondsToTime(res.end).m}}:{{secondsToTime(res.end).s}}</p>
+                                    <p class="font-weight-bold m-0" v-html="ucwords(res.text)"></p>
+                                    <p class="text-muted m-0">
+                                        <small>Start {{secondsToTime(res.start).m}}:{{secondsToTime(res.start).s}}, End {{secondsToTime(res.end).m}}:{{secondsToTime(res.end).s}}</small>
+                                    </p>
                                 </div>
                             </div>
                         </a>
@@ -86,16 +88,16 @@
 
                 <div class="row d-block text-center mt-5" v-if="pagination.total > 0">
                     <p class="text-muted">Total hasil: {{ pagination.total }}, halaman ke: {{ pagination.page }}</p>
-                    <button class="btn btn-outline-danger btn-sm px-3 mx-1" @click="navigasi('first')" :disabled="!pagination['first']">
+                    <button class="btn btn-outline-danger btn-sm px-3 mx-1" @click="navigation('first')" :disabled="!pagination['first']">
                         First
                     </button>
-                    <button class="btn btn-outline-danger btn-sm px-3 mx-1" @click="navigasi('prev')" :disabled="!pagination['prev']">
+                    <button class="btn btn-outline-danger btn-sm px-3 mx-1" @click="navigation('prev')" :disabled="!pagination['prev']">
                         Prev
                     </button>
-                    <button class="btn btn-outline-danger btn-sm px-3 mx-1" @click="navigasi('next')" :disabled="!pagination['next']">
+                    <button class="btn btn-outline-danger btn-sm px-3 mx-1" @click="navigation('next')" :disabled="!pagination['next']">
                         Next
                     </button>
-                    <button class="btn btn-outline-danger btn-sm px-3 mx-1" @click="navigasi('last')" :disabled="!pagination['last']">
+                    <button class="btn btn-outline-danger btn-sm px-3 mx-1" @click="navigation('last')" :disabled="!pagination['last']">
                         Last
                     </button>
                 </div>
@@ -110,9 +112,10 @@
         <script>
             Vue.component('author-profile', {
                 template: `<div>
-                    <h4 class="mb-3 mt-5 text-danger">Latihan Webinar Vue.js Fundamental PENS 2020</h4>
+                    <h5 class="font-weight-bold mt-5">How to Search for Words in a YouTube Video</h5>
+                    <h3 class="my-5 text-danger">Latihan Webinar Vue.js Fundamental PENS 2020</h3>
                     <h1>ROMI A. HAKIM</h1>
-                    <h5 class="text-muted"><u>romihakim99@gmail.com</u></h5>
+                    <h5 class="text-info"><u>romihakim99@gmail.com</u></h5>
                 </div>`
             })
 
@@ -156,7 +159,7 @@
                             console.log(error);
                         }
                     },
-                    async navigasi(type) {
+                    async navigation(type) {
                         if (!this.pagination[type]) {
                             return;
                         }
