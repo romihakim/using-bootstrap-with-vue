@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <title>Webinar Vue.js Fundamental PENS 2020</title>
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+        <style>
+            html, body {
+                font-size: 14px;
+                font-family: Roboto, Arial, sans-serif;
+                color: #606060;
+                background: #f9f9f9;
+            }
+            a, a:hover {
+                color: #606060;
+                text-decoration: none;
+            }
+            main.container {
+                padding-top: 90px;
+                padding-bottom: 50px;
+                max-width: 1500px;
+            }
+            .video-container {
+                position: relative;
+                padding-bottom: 56.25%;
+                padding-top: 30px; height: 0; overflow: hidden;
+            }
+            .video-container iframe,
+            .video-container object,
+            .video-container embed {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            @media (max-width: 576px) {
+                main.container {
+                    padding-top: 155px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <nav class="container-fluid fixed-top bg-white pt-2">
+                <div class="row">
+                    <div class="col-sm-3 text-center text-md-left pl-4">
+                        <a class="navbar-brand" href="#"><img src="logo.jpg"></a>
+                    </div>
+                    <div class="col-sm-3 pt-1">
+                        <input type="text" class="form-control mb-2" placeholder="URL" v-model="url">
+                    </div>
+                    <div class="col-sm-3 pt-1">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" placeholder="Keyword" v-model="keyword">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-danger px-4" title="Clear" @click="cleanUp"><i class="fas fa-redo"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="container">
+                <div class="row">
+                    <div class="col-md-3 col-sx-10 p-2" v-for="(res, i) in searchResult" :key="i">
+                        <a :href="`${url}&t=${res.start}s`" target="_blank">
+                            <div class="card border-0">
+                                <div class="video-container">
+                                    <iframe width="560" height="315" :src="embedVideo(url, res.start, res.end)" frameborder="0" allowfullscreen></iframe>
+                                </div>
+                                <div class="p-3">
+                                    <p class="font-weight-bold mb-2" v-html="ucwords(res.text)"></p>
+                                    <p class="text-muted m-0">Start {{secondsToTime(res.start).m}}:{{secondsToTime(res.start).s}}, End {{secondsToTime(res.end).m}}:{{secondsToTime(res.end).s}}</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row d-block text-center mt-5" v-if="pagination.total > 0">
+                    <p class="text-muted">Total hasil: {{ pagination.total }}, halaman ke: {{ pagination.page }}</p>
+                    <button class="btn btn-outline-danger btn-sm px-3 mx-1" @click="navigasi('first')" :disabled="!pagination['first']">
+                        First
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm px-3 mx-1" @click="navigasi('prev')" :disabled="!pagination['prev']">
+                        Prev
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm px-3 mx-1" @click="navigasi('next')" :disabled="!pagination['next']">
+                        Next
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm px-3 mx-1" @click="navigasi('last')" :disabled="!pagination['last']">
+                        Last
+                    </button>
+                </div>
+                <div class="text-center" v-else>
+                    <author-profile />
+                </div>
+            </main>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="utils.js"></script>
+        <script>
+            Vue.component('author-profile', {
+                template: `<div>
+                    <h4 class="mb-3 mt-5 text-danger">Latihan Webinar Vue.js Fundamental PENS 2020</h4>
+                    <h1>ROMI A. HAKIM</h1>
+                    <h5 class="text-muted"><u>romihakim99@gmail.com</u></h5>
+                </div>`
+            })
+
+            new Vue({
+                el: '#app',
+                data: {
+                    url: 'https://www.youtube.com/watch?v=klnvttPfOUM',
+                    keyword: '',
+                    searchResult: [],
+                    pagination: {
+                        first: null,
+                        last: null,
+                        prev: null,
+                        next: null,
+                        total: 0,
+                        page: null
+                    }
+                },
+                watch: {
+                    keyword: pDebounce(async function keywordHandler(keyword) {
+                        if (keyword && keyword.length >= 3) {
+                            await this.search(keyword, this.url);
+                        } else {
+                            this.cleanResult();
+                        }
+                    }, 250)
+                },
+                methods: {
+                    async search(keyword, url, page) {
+                        try {
+                            const respon = await fetch(page ? page : `https://cari-teks-video-api.vercel.app/api/search?q=${keyword}&size=8&url=${encodeURIComponent(url)}`).then(_ => (_.ok ? _.json() : []));
+
+                            this.searchResult = respon.data;
+                            this.pagination.first = respon.first;
+                            this.pagination.last = respon.last;
+                            this.pagination.prev = respon.prev;
+                            this.pagination.next = respon.next;
+                            this.pagination.total = respon.total;
+                            this.pagination.page = respon.page;
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    },
+                    async navigasi(type) {
+                        if (!this.pagination[type]) {
+                            return;
+                        }
+
+                        await this.search(this.keyword, this.url, this.pagination[type]);
+                    },
+                    cleanUp() {
+                        this.keyword = '';
+                        this.cleanResult();
+                    },
+                    cleanResult() {
+                        this.searchResult = [];
+                        this.pagination = {
+                            first: null,
+                            last: null,
+                            prev: null,
+                            next: null,
+                            total: 0,
+                            page: null
+                        };
+                    },
+                    ucwords(letter) {
+                        return letter.toLowerCase().replace(/\b[a-z]/g, function (letter) {
+                            return letter.toUpperCase();
+                        });
+                    },
+                    pad(num, size) {
+                        var s = num + "";
+
+                        while (s.length < size) {
+                            s = "0" + s;
+                        }
+
+                        return s;
+                    },
+                    secondsToTime(secs) {
+                        secs = Math.round(secs);
+
+                        var hours = Math.floor(secs / (60 * 60));
+
+                        var divisor_for_minutes = secs % (60 * 60);
+                        var minutes = Math.floor(divisor_for_minutes / 60);
+
+                        var divisor_for_seconds = divisor_for_minutes % 60;
+                        var seconds = Math.ceil(divisor_for_seconds);
+
+                        var obj = {
+                            "h": hours,
+                            "m": this.pad(minutes, 2),
+                            "s": this.pad(seconds, 2)
+                        };
+
+                        return obj;
+                    },
+                    embedVideo(url, start, end) {
+                        return url.replace('watch?v=', 'embed/') + '?start=' + start + '&end=' + end + ';rel=0&showinfo=0';
+                    }
+                }
+            })
+        </script>
+    </body>
+</html>
